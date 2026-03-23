@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2, ArrowRightLeft, ChevronDown, Banknote } from 'lucide-react';
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const currencies = ['USD', 'EUR', 'GBP', 'INR', 'AED', 'AUD', 'CAD', 'SGD', 'JPY', 'CNY'];
 
-// 🛑 PASTE YOUR API KEY HERE:
-const API_KEY = "YOUR_API_KEY_HERE"; 
+// 🔑 Import Gemini API Keys from .env (Supports comma-separated keys for rotation)
+const keysString = import.meta.env.VITE_GEMINI_API_KEYS || import.meta.env.VITE_GEMINI_API_KEY || "";
+const apiKeys = keysString.split(',').map(key => key.trim()).filter(key => key.length > 0);
 
 const CurrencyConverter = () => {
   const [amount, setAmount] = useState(1);
@@ -19,43 +21,54 @@ const CurrencyConverter = () => {
   const [isFromOpen, setIsFromOpen] = useState(false);
   const [isToOpen, setIsToOpen] = useState(false);
 
-  // Fetch real-time rates using your API Key
+  // Fetch real-time rates using Gemini 2.5 Flash
   useEffect(() => {
-    const fetchRates = async () => {
+    const fetchRatesWithGemini = async (retryCount = 0) => {
       setIsLoading(true);
       setError(null);
+
+      if (apiKeys.length === 0) {
+        setIsLoading(false);
+        setError("Please add VITE_GEMINI_API_KEY to your .env file.");
+        return;
+      }
+
       try {
-        // 🛠️ This URL uses ExchangeRate-API format. 
-        // If you use a different provider, just replace this URL string!
-        const response = await fetch(`https://v6.exchangerate-api.com/v6/${API_KEY}/latest/${fromCurrency}`);
+        // Initialize Gemini with the current key in the rotation
+        const genAI = new GoogleGenerativeAI(apiKeys[retryCount % apiKeys.length]);
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
         
-        if (!response.ok) {
-          throw new Error("Failed to fetch rates. Check API Key.");
+        // Strict prompt to force Gemini to return ONLY a number
+        const prompt = `What is the current, real-time exchange rate to convert 1 ${fromCurrency} to ${toCurrency}? Respond ONLY with the exact numerical value. Do not include any text, words, or currency symbols. For example, if 1 USD is 83.50 INR, output exactly: 83.50`;
+
+        const result = await model.generateContent(prompt);
+        let rateText = result.response.text().trim();
+        
+        // Strip out any accidental text/symbols Gemini might have hallucinated, leaving only the decimal number
+        rateText = rateText.replace(/[^0-9.]/g, '');
+        const rate = parseFloat(rateText);
+
+        if (isNaN(rate) || rate === 0) {
+          throw new Error("Gemini returned invalid or non-numeric data.");
         }
 
-        const data = await response.json();
-        
-        if (data.result === "error") {
-           throw new Error(data['error-type'] || "API Error");
-        }
-
-        setExchangeRate(data.conversion_rates[toCurrency]);
+        setExchangeRate(rate);
       } catch (err) {
-        console.error("Currency API Error:", err);
-        setError("Could not fetch live rates.");
+        console.error(`Gemini Currency Error (Attempt ${retryCount + 1}):`, err);
+        
+        // Auto-Rotation: If it fails, try the next key in the array!
+        if (retryCount < apiKeys.length - 1) {
+          return fetchRatesWithGemini(retryCount + 1);
+        }
+        
+        setError("AI could not fetch live rates. Try again.");
         setExchangeRate(null);
       } finally {
         setIsLoading(false);
       }
     };
 
-    // Prevent fetching if API key is not entered yet
-    if (API_KEY !== "YOUR_API_KEY_HERE") {
-      fetchRates();
-    } else {
-      setIsLoading(false);
-      setError("Please insert your API Key in the code.");
-    }
+    fetchRatesWithGemini();
   }, [fromCurrency, toCurrency]);
 
   const handleSwap = () => {
@@ -73,7 +86,7 @@ const CurrencyConverter = () => {
         <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center shadow-inner border border-white/30">
           <Banknote className="w-5 h-5 text-white drop-shadow-sm" />
         </div>
-        <h3 className="font-extrabold text-lg tracking-tight drop-shadow-md">Live Currency Converter</h3>
+        <h3 className="font-extrabold text-lg tracking-tight drop-shadow-md">AI Currency Converter</h3>
       </div>
 
       <div className="p-6 md:p-8 flex flex-col space-y-6">
@@ -179,10 +192,10 @@ const CurrencyConverter = () => {
             </h2>
           )}
           
-          {!error && (
+          {!error && !isLoading && (
             <p className="text-xs font-bold text-gray-400 mt-3 flex items-center">
               <span className="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5 animate-pulse"></span>
-              Live market rate via API
+              Powered by Gemini 2.5 Flash
             </p>
           )}
         </div>
