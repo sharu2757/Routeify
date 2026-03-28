@@ -95,12 +95,12 @@ const Footer = () => {
               <div className="flex items-center space-x-3 text-gray-600 dark:text-emerald-100/70 text-sm group">
                 <Phone size={16} className="text-rose-500 dark:text-yellow-400 group-hover:scale-110 transition-transform" />
                 <a href="tel:+1234567890" className="hover:text-rose-600 dark:hover:text-yellow-300 transition-colors font-bold">
-                  +1 (234) 567-890
+                  +91 9876543242
                 </a>
               </div>
               <div className="flex items-center space-x-3 text-gray-600 dark:text-emerald-100/70 text-sm group">
                 <MapPin size={16} className="text-rose-500 dark:text-yellow-400 group-hover:scale-110 transition-transform" />
-                <span className="font-bold">San Francisco, CA</span>
+                <span className="font-bold">Hassan,KA</span>
               </div>
             </div>
           </div>
