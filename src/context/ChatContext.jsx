@@ -9,7 +9,7 @@ export const ChatProvider = ({ children }) => {
     {
       id: 1,
       type: 'assistant',
-      content: 'Namaste! I am Routeify AI. Where would you like to travel in Incredible India, and who are you traveling with?',
+      content: `Namaste! I am **Routeify AI**, your personal travel advisor for Incredible India. \n\nTo craft the absolute perfect, personalized itinerary for you, I will need to know a bit about your plans. Please share as many of these details as you can:\n\n1. 📍 **Destination**\n2. 💰 **Budget**\n3. 📅 **Travel Dates**\n4. ⏳ **Trip Duration**\n5. 👥 **Number of Travelers & Age Group**\n6. 🎒 **Travel Type** (e.g., Leisure, Adventure, Heritage)\n7. 🎯 **Travel Purpose**\n8. 🚗 **Preferred Transport**\n9. 🏨 **Accommodation Type**\n10. 🎢 **Activity Preferences**\n\nWhere would you like to travel, and who are you traveling with?`,
       timestamp: new Date()
     }
   ]);

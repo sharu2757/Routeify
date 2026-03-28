@@ -229,13 +229,16 @@ const Footer = () => {
         {/* Language Selector */}
         <div className="mt-8 flex justify-center items-center space-x-3 text-xs font-bold text-gray-500 dark:text-emerald-200/50">
           <Globe size={14} className="text-gray-400 dark:text-emerald-400" />
-          <span className="cursor-pointer hover:text-rose-500 dark:hover:text-yellow-400 transition-colors">English</span>
+          <span className="cursor-pointer hover:text-rose-500 dark:hover:text-yellow-400 transition-colors">ಕನ್ನಡ</span>
           <span>•</span>
-          <span className="cursor-pointer hover:text-rose-500 dark:hover:text-yellow-400 transition-colors">Español</span>
+          <span className="cursor-pointer hover:text-rose-500 dark:hover:text-yellow-400 transition-colors">English</span>
           <span>•</span>
           <span className="cursor-pointer hover:text-rose-500 dark:hover:text-yellow-400 transition-colors">Français</span>
           <span>•</span>
           <span className="cursor-pointer hover:text-rose-500 dark:hover:text-yellow-400 transition-colors">日本語</span>
+          <span>•</span>
+          <span className="cursor-pointer hover:text-rose-500 dark:hover:text-yellow-400 transition-colors">Español</span>
+          
         </div>
       </div>
     </footer>

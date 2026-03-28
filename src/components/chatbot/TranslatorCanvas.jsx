@@ -97,20 +97,18 @@ const TranslatorCanvas = () => {
           <button
             onClick={handleTranslateClick}
             disabled={isTranslating || isTyping || !lastAiMessage}
-            className={`relative px-6 py-2.5 rounded-full text-sm font-extrabold transition-all duration-300 flex items-center justify-center min-w-[130px] border group ${
+            className={`px-6 py-2.5 rounded-full text-sm font-extrabold transition-all duration-300 flex items-center justify-center min-w-[130px] border-none group ${
               isTranslating || isTyping || !lastAiMessage 
-                ? 'bg-white/10 text-white/40 border-white/20 cursor-not-allowed shadow-none' 
-                : 'bg-white border-white hover:scale-105 active:scale-95 shadow-[0_0_15px_rgba(255,255,255,0.4)] hover:shadow-[0_0_25px_rgba(255,255,255,0.6)]'
+                ? 'bg-gray-300 dark:bg-gray-800 text-gray-500 cursor-not-allowed shadow-none' 
+                : 'bg-gradient-to-r from-amber-500 via-rose-500 to-fuchsia-600 dark:from-emerald-600 dark:via-green-600 dark:to-yellow-500 hover:shadow-lg animate-gradient-x text-white hover:scale-105 active:scale-95'
             }`}
           >
             {isTranslating ? (
-              <Loader2 className="w-5 h-5 animate-spin text-rose-500 dark:text-emerald-600" />
+              <Loader2 className="w-5 h-5 animate-spin text-white" />
             ) : (
               <div className="flex items-center space-x-1.5">
-                <span className={isTranslating || isTyping || !lastAiMessage ? '' : 'text-transparent bg-clip-text bg-gradient-to-r from-amber-500 via-rose-500 to-fuchsia-600 dark:from-emerald-500 dark:via-green-600 dark:to-yellow-500 animate-gradient-x'}>
-                  Translate
-                </span>
-                <Sparkles className={`w-4 h-4 transition-transform group-hover:scale-110 group-hover:rotate-12 ${isTranslating || isTyping || !lastAiMessage ? 'text-white/40' : 'text-rose-500 dark:text-yellow-500'}`} />
+                <span>Translate</span>
+                <Sparkles className="w-4 h-4 transition-transform group-hover:scale-110 group-hover:rotate-12 text-white" />
               </div>
             )}
           </button>
