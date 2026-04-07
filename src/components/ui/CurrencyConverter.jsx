@@ -16,7 +16,7 @@ const CurrencyConverter = () => {
   const [exchangeRate, setExchangeRate] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [dataSource, setDataSource] = useState("Gemini 2.5 Flash");
+  const [dataSource, setDataSource] = useState("Gemini AI (Live Search)");
   
   const [isFromOpen, setIsFromOpen] = useState(false);
   const [isToOpen, setIsToOpen] = useState(false);
@@ -29,7 +29,7 @@ const CurrencyConverter = () => {
   const handleConvertClick = async (retryCount = 0) => {
     setIsLoading(true);
     setError(null);
-    setDataSource("Gemini 2.5 Flash"); // Default source
+    setDataSource("Gemini AI (Live Search)");
 
     try {
       if (apiKeys.length === 0) {
@@ -37,42 +37,48 @@ const CurrencyConverter = () => {
       }
 
       const genAI = new GoogleGenerativeAI(apiKeys[retryCount % apiKeys.length]);
-      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
       
-      const prompt = `You are a strict financial API. Return exactly ONE number: the current exchange rate for 1 ${fromCurrency} to ${toCurrency}. Do not include text, explanations, or currency symbols.`;
+      // 🚀 THE MAGIC FIX: We explicitly tell Gemini it is allowed to use Google Search!
+      const model = genAI.getGenerativeModel({ 
+        model: "gemini-2.5-flash",
+        tools: [{ googleSearch: {} }] 
+      });
+      
+      // 🛠️ Updated prompt telling it to USE the search tool
+      const prompt = `Use Google Search to find the exact, current live exchange rate to convert 1 ${fromCurrency} to ${toCurrency}. Reply strictly with ONLY the precise decimal number (e.g., 92.74). Do not include any text, currency symbols, or warnings.`;
 
       const result = await model.generateContent(prompt);
       const rateText = result.response.text();
       
       console.log("Gemini Raw Output:", rateText);
       
-      // 🛠️ FIX: Bulletproof Regex to extract ONLY the first decimal number found
-      const match = rateText.match(/[0-9]+(\.[0-9]+)?/);
+      // Extract the number from whatever Gemini says
+      const match = rateText.match(/\d+(\.\d+)?/);
       
       if (!match) {
         throw new Error("Gemini did not return a valid number.");
       }
 
       const rate = parseFloat(match[0]);
-      if (rate === 0) throw new Error("Rate cannot be zero.");
+      if (rate <= 0) throw new Error("Rate cannot be zero.");
 
       setExchangeRate(rate);
 
     } catch (err) {
-      console.error(`Gemini failed, rotating or falling back...`, err);
+      console.error(`Gemini failed, checking fallback...`, err);
       
-      // Try next API key first
+      // Rotate API key if available
       if (retryCount < apiKeys.length - 1) {
         return handleConvertClick(retryCount + 1);
       }
       
-      // 🚀 THE MAGIC FIX: If Gemini completely fails, silently use a free Open API so the user NEVER sees an error!
+      // Silent Fallback if all Gemini keys fail (e.g., rate limits)
       try {
         console.log("Using silent fallback Open API...");
         const response = await fetch(`https://open.er-api.com/v6/latest/${fromCurrency}`);
         const data = await response.json();
         setExchangeRate(data.rates[toCurrency]);
-        setDataSource("Live Market API"); // Update the UI to show we used the fallback
+        setDataSource("Live Market API (Fallback)");
       } catch (fallbackErr) {
         setError("Could not fetch live rates. Check your internet connection.");
         setExchangeRate(null);
@@ -182,7 +188,6 @@ const CurrencyConverter = () => {
           </div>
         </div>
 
-        {/* 🚀 FIXED THEMED CONVERT BUTTON */}
         <button
           onClick={() => handleConvertClick()}
           disabled={isLoading}
@@ -218,7 +223,7 @@ const CurrencyConverter = () => {
                     {convertedAmount} {toCurrency}
                   </h2>
                   <p className="text-xs font-bold text-gray-400 mt-3 flex items-center">
-                    <span className="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5 animate-pulse"></span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mr-1.5 animate-pulse"></span>
                     Powered by {dataSource}
                   </p>
                 </>

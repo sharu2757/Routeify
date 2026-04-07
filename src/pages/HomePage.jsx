@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Quote, Compass, Star, Heart, MessageCircle, ArrowRight, MapPin, Info, X, CheckCircle2, Car, Sun, Calendar, Maximize2, Minimize2, ArrowUp, UtensilsCrossed } from 'lucide-react'
+import { Quote, Compass, Star, Heart, MessageCircle, ArrowRight, MapPin, Info, X, CheckCircle2, Car, Sun, Calendar, Maximize2, Minimize2, ArrowUp, UtensilsCrossed, Map as MapIcon } from 'lucide-react'
 import ChatInterface from '../components/chatbot/ChatInterface'
 import TranslatorCanvas from '../components/chatbot/TranslatorCanvas'
 import FloatingReviews from '../components/ui/FloatingReviews'
@@ -96,7 +96,6 @@ const HomePage = () => {
     window.scrollToFood = () => scrollToSection(foodRef)
     window.scrollToFeedback = () => scrollToSection(feedbackRef)
 
-    // Listen for scroll to show Back to Top button
     const handleScroll = () => setShowBackToTop(window.scrollY > 400)
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
@@ -170,35 +169,88 @@ const HomePage = () => {
 
       {/* 🗺️ DEDICATED MAP SECTION */}
       <section id="map" ref={mapRef} className="py-12 px-4 bg-transparent relative z-10">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-8">
+        <div className="max-w-6xl mx-auto flex flex-col space-y-8">
+          
+          <div className="text-center">
             <h2 className="text-3xl md:text-4xl font-display font-extrabold mb-4 text-gray-900 dark:text-white drop-shadow-md">
               Interactive <span className="text-emerald-500 dark:text-yellow-400">Map</span>
             </h2>
+            <p className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto font-medium">
+              Explore your destinations seamlessly without ever leaving the platform.
+            </p>
           </div>
           
-          <div className="relative w-full h-[50vh] md:h-[65vh] bg-white/70 dark:bg-emerald-900/60 backdrop-blur-xl rounded-[2rem] overflow-hidden shadow-xl border border-white/40 dark:border-emerald-800 group">
-            <button
-              onClick={() => setIsMapExpanded(true)}
-              className="absolute bottom-6 right-6 z-20 p-3 bg-white dark:bg-emerald-900 hover:bg-rose-500 dark:hover:bg-yellow-500 hover:text-white text-gray-800 dark:text-gray-100 rounded-full shadow-xl transition-all hover:scale-110 active:scale-95"
-              title="Expand Map"
-            >
-              <Maximize2 className="w-6 h-6" />
-            </button>
-
-            <div className="w-full h-full bg-gray-200 dark:bg-gray-800 pointer-events-auto">
-              <iframe 
-                src="https://maps.google.com/maps?q=India&t=k&z=5&ie=UTF8&iwloc=&output=embed" 
-                width="100%" 
-                height="100%" 
-                style={{ border: 0 }} 
-                loading="lazy" 
-                className="w-full h-full object-cover"
-              ></iframe>
+          <div className="relative w-full h-[50vh] md:h-[65vh] rounded-[2rem] overflow-hidden shadow-2xl border-4 border-white/60 dark:border-gray-800 group bg-gray-200 dark:bg-gray-800">
+            
+            {/* 🚀 CUSTOM OVERLAY BUTTON */}
+            <div className="absolute top-4 right-4 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <button
+                onClick={() => setIsMapExpanded(true)}
+                className="bg-gray-900/80 backdrop-blur-md hover:bg-black text-white px-4 py-3 rounded-xl flex items-center space-x-2 shadow-xl transform hover:scale-105 transition-all border border-gray-700"
+              >
+                <Maximize2 className="w-5 h-5" />
+                <span className="font-bold text-sm tracking-wide">Expand Fullscreen</span>
+              </button>
             </div>
+
+            <iframe 
+              title="Interactive Map"
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15000000!2d70!3d22!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x30635ff06b92b791%3A0xd78c4fa1854213a6!2sIndia!5e1!3m2!1sen!2sin!4v1710000000000!5m2!1sen!2sin" 
+              width="100%" 
+              height="100%" 
+              style={{ border: 0 }} 
+              loading="lazy" 
+              referrerPolicy="no-referrer-when-downgrade"
+              className="w-full h-full object-cover"
+            ></iframe>
           </div>
         </div>
       </section>
+
+      {/* 🔍 EXPANDED MAP MODAL */}
+      <AnimatePresence>
+        {isMapExpanded && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-xl p-4 md:p-8"
+          >
+            <div className="relative w-full h-full max-w-7xl max-h-[90vh] bg-gray-900 rounded-[2.5rem] overflow-hidden shadow-2xl border border-gray-700 flex flex-col">
+              
+              {/* Modal Header */}
+              <div className="bg-gray-900 px-6 py-4 flex items-center justify-between border-b border-gray-800 shrink-0">
+                <div className="flex items-center space-x-3 text-white">
+                  <MapIcon className="w-6 h-6 text-emerald-500 dark:text-yellow-400" />
+                  <h3 className="font-extrabold text-xl">Routeify Map Explorer</h3>
+                </div>
+                <button
+                  onClick={() => setIsMapExpanded(false)}
+                  className="p-2 bg-gray-800 hover:bg-rose-500 rounded-full text-white transition-colors"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              {/* Expanded iframe */}
+              <div className="flex-grow w-full h-full relative">
+                <iframe
+                  title="Expanded Interactive Map"
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15000000!2d70!3d22!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x30635ff06b92b791%3A0xd78c4fa1854213a6!2sIndia!5e1!3m2!1sen!2sin!4v1710000000000!5m2!1sen!2sin"
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0 }}
+                  allowFullScreen=""
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  className="absolute inset-0 w-full h-full"
+                ></iframe>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* 💱 CURRENCY CONVERTER SECTION */}
       <section id="converter" className="py-12 px-4 bg-transparent relative z-10">
@@ -211,52 +263,6 @@ const HomePage = () => {
           <CurrencyConverter />
         </div>
       </section>
-
-      {/* 🗺️ DESTINATIONS */}
-      {/* ... rest of your code ... */}
-
-      {/* 🔍 EXPANDED MAP MODAL */}
-      <AnimatePresence>
-        {isMapExpanded && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsMapExpanded(false)}
-              className="absolute inset-0 bg-black/80 backdrop-blur-sm cursor-pointer"
-            />
-            
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="relative w-full max-w-6xl h-[85vh] bg-gray-100 dark:bg-emerald-950 rounded-[2.5rem] shadow-2xl overflow-hidden z-10 border border-white/20 flex flex-col"
-            >
-              <button
-                onClick={() => setIsMapExpanded(false)}
-                className="absolute top-4 right-4 z-20 p-3 bg-rose-500 hover:bg-rose-600 dark:bg-emerald-600 dark:hover:bg-emerald-500 text-white rounded-full transition-all shadow-2xl hover:scale-110 active:scale-95"
-                title="Minimize Map"
-              >
-                <Minimize2 className="w-5 h-5" />
-              </button>
-
-              <div className="w-full h-full flex-1 bg-gray-200 dark:bg-gray-800">
-                <iframe 
-                  src="https://maps.google.com/maps?q=India&t=k&z=5&ie=UTF8&iwloc=&output=embed" 
-                  width="100%" 
-                  height="100%" 
-                  style={{ border: 0 }} 
-                  allowFullScreen="" 
-                  loading="lazy" 
-                  className="w-full h-full object-cover"
-                ></iframe>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
 
       {/* 🗺️ DESTINATIONS */}
       <section id="destinations" ref={destinationsRef} className="py-12 px-4 bg-transparent relative z-10">
@@ -285,7 +291,6 @@ const HomePage = () => {
                       </div>
                       <div className="mt-auto pt-2">
                         <span className="font-extrabold text-sm block mb-2">Est. {dest.price}</span>
-                        {/* 🛠️ FIX: Added Booking Action Button */}
                         <button className="w-full py-2.5 bg-gradient-to-r from-rose-500 to-fuchsia-600 dark:from-emerald-500 dark:to-green-600 text-white rounded-xl font-extrabold shadow-md hover:shadow-lg hover:scale-[1.02] transition-all">
                           Explore Packages
                         </button>
@@ -324,7 +329,6 @@ const HomePage = () => {
                       </div>
                       <div className="mt-auto pt-2">
                         <span className="font-extrabold text-sm block mb-2">₹{hotel.price}/nt</span>
-                        {/* 🛠️ FIX: Added Booking Action Button */}
                         <button className="w-full py-2.5 bg-gradient-to-r from-fuchsia-600 to-purple-600 dark:from-emerald-500 dark:to-yellow-500 text-white rounded-xl font-extrabold shadow-md hover:shadow-lg hover:scale-[1.02] transition-all">
                           Book Room
                         </button>
@@ -364,7 +368,6 @@ const HomePage = () => {
                       </div>
                       <div className="mt-auto pt-2">
                         <span className="font-extrabold text-sm block mb-2">₹{route.price}</span>
-                        {/* 🛠️ FIX: Added Booking Action Button */}
                         <button className="w-full py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 dark:from-green-500 dark:to-emerald-600 text-white rounded-xl font-extrabold shadow-md hover:shadow-lg hover:scale-[1.02] transition-all">
                           Book Route
                         </button>
@@ -394,7 +397,6 @@ const HomePage = () => {
                     <p className="font-bold text-xs text-gray-500 dark:text-gray-400">{food.location}</p>
                     <span className="text-[10px] font-extrabold px-2 py-1 bg-rose-100 dark:bg-green-900/40 text-rose-700 dark:text-yellow-400 rounded-full">{food.cuisine}</span>
                   </div>
-                  {/* 🛠️ FIX: Added Action Button to Food Card */}
                   <button className="w-full mt-auto py-2 bg-rose-50 dark:bg-emerald-800 text-rose-600 dark:text-yellow-400 rounded-lg font-bold hover:bg-rose-100 dark:hover:bg-emerald-700 transition-colors flex items-center justify-center space-x-2">
                     <UtensilsCrossed className="w-4 h-4" />
                     <span>Find Spots</span>
