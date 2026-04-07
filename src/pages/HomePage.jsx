@@ -4,7 +4,6 @@ import { Quote, Compass, Star, Heart, MessageCircle, ArrowRight, MapPin, Info, X
 import ChatInterface from '../components/chatbot/ChatInterface'
 import TranslatorCanvas from '../components/chatbot/TranslatorCanvas'
 import FloatingReviews from '../components/ui/FloatingReviews'
-import CurrencyConverter from '../components/ui/CurrencyConverter'
 import FeedbackSection from '../components/sections/FeedbackSection'
 import { useChat } from '../context/ChatContext'
 
@@ -252,17 +251,7 @@ const HomePage = () => {
         )}
       </AnimatePresence>
 
-      {/* 💱 CURRENCY CONVERTER SECTION */}
-      <section id="converter" className="py-12 px-4 bg-transparent relative z-10">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-8">
-            <h2 className="text-3xl md:text-4xl font-display font-extrabold mb-4 text-gray-900 dark:text-white drop-shadow-md">
-              Travel <span className="text-amber-500 dark:text-yellow-400">Tools</span>
-            </h2>
-          </div>
-          <CurrencyConverter />
-        </div>
-      </section>
+      
 
       {/* 🗺️ DESTINATIONS */}
       <section id="destinations" ref={destinationsRef} className="py-12 px-4 bg-transparent relative z-10">
