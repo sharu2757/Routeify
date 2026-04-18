@@ -76,7 +76,6 @@ const Navbar = ({ toggleTheme, theme }) => {
 
   const navLinks = [
     { name: 'Map', section: 'map', icon: Globe },
-    { name: 'Convert', section: 'converter', icon: Calculator },
     { name: 'Destinations', section: 'destinations', icon: MapPin },
     { name: 'Hotels', section: 'hotels', icon: Hotel },
     { name: 'Routes', section: 'routes', icon: MapIcon },

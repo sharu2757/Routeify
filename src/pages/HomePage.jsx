@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Quote, Compass, Star, Heart, MessageCircle, ArrowRight, MapPin, Info, X, CheckCircle2, Car, Sun, Calendar, Maximize2, Minimize2, ArrowUp, UtensilsCrossed, Map as MapIcon } from 'lucide-react'
 import ChatInterface from '../components/chatbot/ChatInterface'
+import AuthModal from '../components/ui/AuthModal';
 import TranslatorCanvas from '../components/chatbot/TranslatorCanvas'
 import FloatingReviews from '../components/ui/FloatingReviews'
 import FeedbackSection from '../components/sections/FeedbackSection'
@@ -67,7 +68,8 @@ const explorerReviews = [
 const chatSuggestions = ["Plan a 4-day trip to Belur & Hampi", "Best time to visit Kerala", "Luxury hotels in Udaipur"]
 
 const HomePage = () => {
-  const { floatingReviews, currentQuote, sendMessage } = useChat()
+  // 🚀 NEW: Import mapLocation from useChat
+  const { floatingReviews, currentQuote, sendMessage, mapLocation } = useChat()
   const heroRef = useRef(null)
   const mapRef = useRef(null)
   const destinationsRef = useRef(null)
@@ -192,9 +194,10 @@ const HomePage = () => {
               </button>
             </div>
 
+            {/* 🚀 DYNAMIC IFRAME SOURCE INJECTED HERE */}
             <iframe 
               title="Interactive Map"
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15000000!2d70!3d22!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x30635ff06b92b791%3A0xd78c4fa1854213a6!2sIndia!5e1!3m2!1sen!2sin!4v1710000000000!5m2!1sen!2sin" 
+              src={`https://maps.google.com/maps?q=${encodeURIComponent(mapLocation)}&t=h&z=11&ie=UTF8&iwloc=&output=embed`}
               width="100%" 
               height="100%" 
               style={{ border: 0 }} 
@@ -232,11 +235,11 @@ const HomePage = () => {
                 </button>
               </div>
 
-              {/* Expanded iframe */}
+              {/* 🚀 DYNAMIC IFRAME SOURCE INJECTED HERE TOO */}
               <div className="flex-grow w-full h-full relative">
                 <iframe
                   title="Expanded Interactive Map"
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15000000!2d70!3d22!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x30635ff06b92b791%3A0xd78c4fa1854213a6!2sIndia!5e1!3m2!1sen!2sin!4v1710000000000!5m2!1sen!2sin"
+                  src={`https://maps.google.com/maps?q=${encodeURIComponent(mapLocation)}&t=&z=11&ie=UTF8&iwloc=&output=embed`}
                   width="100%"
                   height="100%"
                   style={{ border: 0 }}
@@ -435,6 +438,10 @@ const HomePage = () => {
           </div>
         </section>
       </div>
+
+      {/* 🚀 THE NEW AUTH MODAL GOES HERE */}
+      <AuthModal />
+
     </div>
   )
 }

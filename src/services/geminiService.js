@@ -1,64 +1,56 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// 1. Fetch and parse multiple API keys from the .env file
-// Falls back to singular VITE_GEMINI_API_KEY if plural isn't found
-const keysString = import.meta.env.VITE_GEMINI_API_KEYS || import.meta.env.VITE_GEMINI_API_KEY || "";
+// 1. Fetch keys and strip any accidental hidden quotes that cause 403 errors
+let keysString = import.meta.env.VITE_GEMINI_API_KEYS || import.meta.env.VITE_GEMINI_API_KEY || "";
+keysString = keysString.replace(/['"]/g, ''); 
 const apiKeys = keysString.split(',').map(key => key.trim()).filter(key => key.length > 0);
 
-if (apiKeys.length === 0) {
-  console.error("CRITICAL ERROR: No Gemini API keys found in .env file.");
-}
+// 🚨 This will print your active key to the browser console so we can PROVE it updated
+console.log("🚨 VITE IS USING THIS KEY:", apiKeys.length > 0 ? apiKeys[0].substring(0, 10) + "..." : "NO KEY FOUND");
 
-// Global state for rotation and chat history
 let currentKeyIndex = 0;
 let chatSession = null;
 
+// 🚀 UPDATED INSTRUCTION: Fast, frictionless plan generation
 const systemInstruction = `You are Routeify AI, an elite travel advisor for India. 
 
-Your goal is to have a natural conversation with the user to collect the following 10 inputs before generating a final plan:
-1. Destination
-2. Budget
-3. Travel dates
-4. Trip duration
-5. Number of travelers & Age Group
-6. Travel Type
-7. Travel Purpose
-8. Preferred transport
-9. Accommodation type
-10. Activity preferences
+Your goal is to provide instant value. You NO LONGER need 10 inputs to start. As long as the user gives you a Destination and a rough Duration, you MUST generate a preliminary travel plan immediately.
 
 CONVERSATION RULES:
-- If you do not have enough of these 10 inputs, DO NOT generate the itinerary yet. 
-- Ask friendly follow-up questions to gather the missing info.
+- If the user provides basic details (e.g., "3 days in Mumbai"), generate a great baseline itinerary using logical assumptions (e.g., standard budget, popular tourist spots).
+- At the very end of your response, politely ask ONE quick question to refine the plan.
+- NEVER give the user a long list of questions to answer.
 
 PLAN GENERATION RULES:
-Once you have the details, generate a complete trip plan formatted strictly in Markdown. You MUST include:
+Format strictly in Markdown. You MUST include:
 
 1. THE OVERVIEW
-- Suggested Destination, Vibe, Seasonal Insights, and Local Event Detection.
+- Suggested Vibe, Seasonal Insights, and Local Event Detection.
 
 2. COST BALANCING & BUDGET
-- Break down estimated costs in Indian Rupees (₹) for Transport, Accommodation, Food, and Entry Tickets.
+- Break down estimated costs in Indian Rupees (₹).
 
 3. DAY-BY-DAY ITINERARY
 - Detailed schedule with 🌟 Must Visit, 👍 Good to Visit, and ☕ Optional categorizations.
-- Include estimated distance/time between attractions.
 
 4. ACCOMMODATION (WITH BOOKING LINKS)
-- Suggest specific, highly-rated hotels based on their budget.
-- CRITICAL: You MUST provide a clickable Markdown link for every hotel.
+- Suggest highly-rated hotels. Provide clickable Markdown links.
 
 5. LOCAL GUIDES & ASSISTANCE
-- Recommend specific types of local guides needed.
-- Provide clickable links to reliable platforms where they can hire verified local guides.
+- Recommend specific types of local guides needed with clickable links.
 
 6. SURVIVAL, FOOD & CULTURE GUIDE
-- Local customs, dress codes, safety levels, and must-try local food spots.
+- Local customs, safety levels, and must-try local food spots.
+
+7. THE HIDDEN MAP TRIGGER (CRITICAL)
+- At the very end of EVERY response, you MUST include a secret tag indicating the primary destination being discussed. 
+- Format it exactly like this: |MAP: City, State|
+- Example: |MAP: Mumbai, Maharashtra|
+- If no specific place is discussed yet, use |MAP: India|
 
 Be engaging and professional. Use emojis to make the UI look beautiful.`;
-
-// Helper to get a fresh GenerativeModel instance with the CURRENT active key
 const getCurrentModel = () => {
+  if (apiKeys.length === 0) throw new Error("No API Key configured.");
   const genAI = new GoogleGenerativeAI(apiKeys[currentKeyIndex]);
   return genAI.getGenerativeModel({
     model: "gemini-2.5-flash-lite",
@@ -66,19 +58,13 @@ const getCurrentModel = () => {
   });
 };
 
-// Modified to accept existing history so we don't lose context during a key rotation
 export const initializeChat = (existingHistory = []) => {
   const model = getCurrentModel();
   chatSession = model.startChat({
     history: existingHistory,
-    generationConfig: {
-      temperature: 0.7,
-      maxOutputTokens: 8192,
-    },
   });
 };
 
-// Main generation function with auto-retry and key rotation
 export const generateAIResponse = async (userMessage, retryCount = 0) => {
   if (!chatSession) initializeChat();
   
@@ -88,59 +74,35 @@ export const generateAIResponse = async (userMessage, retryCount = 0) => {
   } catch (error) {
     console.error(`Gemini API Error (Key Index ${currentKeyIndex}):`, error);
 
-    // If we hit an error (like rate limit/quota) and haven't exhausted all keys
     if (retryCount < apiKeys.length - 1) {
-      console.warn("Rotating API Key and retrying chat request...");
-      
-      // 1. Save the conversation history before it's lost
+      console.warn("Rotating API Key...");
       let history = [];
       try {
         history = await chatSession.getHistory();
       } catch (historyError) {
-        console.error("Could not recover history during rotation.", historyError);
+        console.error("Could not recover history.", historyError);
       }
-      
-      // 2. Rotate to the next API key
       currentKeyIndex = (currentKeyIndex + 1) % apiKeys.length;
-      
-      // 3. Re-initialize the session with the new key but keep the old history
       initializeChat(history);
-      
-      // 4. Retry the exact same message
       return generateAIResponse(userMessage, retryCount + 1);
     }
-
-    throw new Error(error.message || "Failed to generate AI response. All API keys exhausted.");
+    throw new Error(error.message || "Failed to connect to the brain.");
   }
 };
 
-// Translation function with auto-retry and key rotation
 export const translateText = async (text, targetLanguage, retryCount = 0) => {
+  if (apiKeys.length === 0) throw new Error("No API Key configured.");
   try {
     const genAI = new GoogleGenerativeAI(apiKeys[currentKeyIndex]);
-    const translateModel = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" }); 
-    
-    const prompt = `You are an expert translator. Translate the following travel itinerary/text into ${targetLanguage}. 
-    CRITICAL RULES:
-    1. Maintain ALL Markdown formatting perfectly (headings, bold, bullets).
-    2. Keep all emojis intact.
-    3. Do NOT add any extra conversational text, just return the exact translation.
-    
-    TEXT TO TRANSLATE:
-    ${text}`;
-    
+    const translateModel = genAI.getGenerativeModel({ model: "gemini-2.5-flash" }); 
+    const prompt = `Translate the following text into ${targetLanguage}. Maintain all Markdown and emojis.\n\n${text}`;
     const result = await translateModel.generateContent(prompt);
     return result.response.text();
   } catch (error) {
-    console.error(`Translation API Error (Key Index ${currentKeyIndex}):`, error);
-    
-    // If translation fails, rotate key and retry
     if (retryCount < apiKeys.length - 1) {
-      console.warn("Rotating API Key and retrying translation...");
       currentKeyIndex = (currentKeyIndex + 1) % apiKeys.length;
       return translateText(text, targetLanguage, retryCount + 1);
     }
-    
-    throw new Error(error.message || "Translation failed. All API keys exhausted.");
+    throw new Error("Translation failed.");
   }
 };
