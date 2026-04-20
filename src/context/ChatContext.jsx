@@ -49,7 +49,8 @@ export const ChatProvider = ({ children }) => {
   // 🌐 THE NETWORK FUNCTIONS
   const fetchChatHistory = async (email) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/chats/${email}`);
+      // UPDATED: Now dynamically points to your Render backend via .env
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/chats/${email}`);
       const data = await response.json();
       
       if (data.success && data.messages && data.messages.length > 0) {
@@ -70,7 +71,8 @@ export const ChatProvider = ({ children }) => {
 
   const saveChatHistory = async (email, updatedMessages) => {
     try {
-      await fetch('http://localhost:5000/api/chats/save', {
+      // UPDATED: Now dynamically points to your Render backend via .env
+      await fetch(`${import.meta.env.VITE_API_URL}/api/chats/save`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email, messages: updatedMessages })

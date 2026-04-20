@@ -49,11 +49,14 @@ Format strictly in Markdown. You MUST include:
 - If no specific place is discussed yet, use |MAP: India|
 
 Be engaging and professional. Use emojis to make the UI look beautiful.`;
+
 const getCurrentModel = () => {
   if (apiKeys.length === 0) throw new Error("No API Key configured.");
   const genAI = new GoogleGenerativeAI(apiKeys[currentKeyIndex]);
+  
+  // CHANGED: Upgraded to 1.5-flash to avoid 503 traffic spikes on the lite model
   return genAI.getGenerativeModel({
-    model: "gemini-2.5-flash-lite",
+    model: "gemini-1.5-flash",
     systemInstruction: systemInstruction
   });
 };
@@ -86,7 +89,17 @@ export const generateAIResponse = async (userMessage, retryCount = 0) => {
       initializeChat(history);
       return generateAIResponse(userMessage, retryCount + 1);
     }
-    throw new Error(error.message || "Failed to connect to the brain.");
+    
+    // 🛡️ GRACEFUL FALLBACK LOGIC
+    const errMsg = error.message || "";
+    if (errMsg.includes("429") || errMsg.includes("Quota") || errMsg.includes("exceeded")) {
+      throw new Error("I am receiving a lot of requests right now! Please wait about 30 seconds and try asking me again. ⏳");
+    }
+    if (errMsg.includes("503") || errMsg.includes("high demand") || errMsg.includes("overloaded")) {
+      throw new Error("My cloud servers are experiencing a massive traffic spike right now! Please wait a minute or two and try again. 🚀");
+    }
+
+    throw new Error("I hit a slight snag connecting to my brain. Please try again in a moment!");
   }
 };
 
@@ -94,7 +107,7 @@ export const translateText = async (text, targetLanguage, retryCount = 0) => {
   if (apiKeys.length === 0) throw new Error("No API Key configured.");
   try {
     const genAI = new GoogleGenerativeAI(apiKeys[currentKeyIndex]);
-    const translateModel = genAI.getGenerativeModel({ model: "gemini-2.5-flash" }); 
+    const translateModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }); 
     const prompt = `Translate the following text into ${targetLanguage}. Maintain all Markdown and emojis.\n\n${text}`;
     const result = await translateModel.generateContent(prompt);
     return result.response.text();
@@ -103,6 +116,12 @@ export const translateText = async (text, targetLanguage, retryCount = 0) => {
       currentKeyIndex = (currentKeyIndex + 1) % apiKeys.length;
       return translateText(text, targetLanguage, retryCount + 1);
     }
+    
+    const errMsg = error.message || "";
+    if (errMsg.includes("429") || errMsg.includes("503")) {
+      throw new Error("Translation servers are busy! Please try again in a moment. 🌍");
+    }
+    
     throw new Error("Translation failed.");
   }
 };
