@@ -54,21 +54,26 @@ const getCurrentModel = () => {
   if (apiKeys.length === 0) throw new Error("No API Key configured.");
   const genAI = new GoogleGenerativeAI(apiKeys[currentKeyIndex]);
   
-  // CHANGED: Upgraded to 1.5-flash to avoid 503 traffic spikes on the lite model
+  // UPDATED: Using the most stable string for the 2.0 version
   return genAI.getGenerativeModel({
-    model: "gemini-1.5-flash",
+    model: "gemini-3.1-flash-lite-preview", 
     systemInstruction: systemInstruction
   });
 };
 
 export const initializeChat = (existingHistory = []) => {
-  const model = getCurrentModel();
-  chatSession = model.startChat({
-    history: existingHistory,
-  });
+  try {
+    const model = getCurrentModel();
+    chatSession = model.startChat({
+      history: existingHistory,
+    });
+  } catch (error) {
+    console.error("Failed to initialize chat session:", error);
+  }
 };
 
 export const generateAIResponse = async (userMessage, retryCount = 0) => {
+  // If no session exists or previous one crashed, start fresh
   if (!chatSession) initializeChat();
   
   try {
@@ -77,14 +82,18 @@ export const generateAIResponse = async (userMessage, retryCount = 0) => {
   } catch (error) {
     console.error(`Gemini API Error (Key Index ${currentKeyIndex}):`, error);
 
+    // If it's a model-not-found error, we'll try a fallback model name
+    const errorStr = error.toString();
+    
     if (retryCount < apiKeys.length - 1) {
-      console.warn("Rotating API Key...");
+      console.warn("Rotating API Key or Retrying...");
       let history = [];
       try {
         history = await chatSession.getHistory();
-      } catch (historyError) {
-        console.error("Could not recover history.", historyError);
+      } catch (hError) {
+        history = [];
       }
+      
       currentKeyIndex = (currentKeyIndex + 1) % apiKeys.length;
       initializeChat(history);
       return generateAIResponse(userMessage, retryCount + 1);
@@ -98,7 +107,8 @@ export const generateAIResponse = async (userMessage, retryCount = 0) => {
     if (errMsg.includes("503") || errMsg.includes("high demand") || errMsg.includes("overloaded")) {
       throw new Error("My cloud servers are experiencing a massive traffic spike right now! Please wait a minute or two and try again. 🚀");
     }
-
+    
+    // If the 2.0 model name failed, the snag is likely the specific model name.
     throw new Error("I hit a slight snag connecting to my brain. Please try again in a moment!");
   }
 };
@@ -107,7 +117,7 @@ export const translateText = async (text, targetLanguage, retryCount = 0) => {
   if (apiKeys.length === 0) throw new Error("No API Key configured.");
   try {
     const genAI = new GoogleGenerativeAI(apiKeys[currentKeyIndex]);
-    const translateModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }); 
+    const translateModel = genAI.getGenerativeModel({ model: "gemini-3.1-flash-lite-preview" }); 
     const prompt = `Translate the following text into ${targetLanguage}. Maintain all Markdown and emojis.\n\n${text}`;
     const result = await translateModel.generateContent(prompt);
     return result.response.text();

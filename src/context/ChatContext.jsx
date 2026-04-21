@@ -1,6 +1,10 @@
 import { createContext, useState, useEffect, useContext, useRef } from 'react';
 import { generateAIResponse, initializeChat } from '../services/geminiService';
 
+// 🔥 ADDED: Import Firebase Authentication tools
+import { auth, googleProvider } from '../services/firebase';
+import { signInWithPopup, signOut } from 'firebase/auth';
+
 export const ChatContext = createContext();
 
 export const ChatProvider = ({ children }) => {
@@ -49,7 +53,6 @@ export const ChatProvider = ({ children }) => {
   // 🌐 THE NETWORK FUNCTIONS
   const fetchChatHistory = async (email) => {
     try {
-      // UPDATED: Now dynamically points to your Render backend via .env
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/chats/${email}`);
       const data = await response.json();
       
@@ -71,7 +74,6 @@ export const ChatProvider = ({ children }) => {
 
   const saveChatHistory = async (email, updatedMessages) => {
     try {
-      // UPDATED: Now dynamically points to your Render backend via .env
       await fetch(`${import.meta.env.VITE_API_URL}/api/chats/save`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -148,28 +150,41 @@ export const ChatProvider = ({ children }) => {
     }
   };
 
-  // 🔐 Login Flow (Still a demo UI, but acts like a real login under the hood)
+  // 🔐 REAL GOOGLE LOGIN FLOW
   const login = async () => {
-    const demoEmail = "explorer@routeify.com"; // We assign them a permanent cloud ID
-    
-    setIsAuthenticated(true);
-    setUserEmail(demoEmail);
-    localStorage.setItem('routeify_auth', 'true');
-    localStorage.setItem('routeify_email', demoEmail);
-    setShowAuthModal(false);
+    try {
+      // 1. Trigger the Google Popup
+      const result = await signInWithPopup(auth, googleProvider);
+      const realEmail = result.user.email; // Grab their actual Gmail!
+      
+      // 2. Set the state
+      setIsAuthenticated(true);
+      setUserEmail(realEmail);
+      localStorage.setItem('routeify_auth', 'true');
+      localStorage.setItem('routeify_email', realEmail);
+      setShowAuthModal(false);
 
-    // Instead of staying with local memory, download their permanent cloud memory!
-    await fetchChatHistory(demoEmail);
+      // 3. Fetch their personal cloud memory using their real email
+      await fetchChatHistory(realEmail);
+      
+    } catch (error) {
+      console.error("Google Sign-In Failed:", error);
+    }
   };
 
-  // 🚪 Logout Flow
-  const logout = () => {
-    setIsAuthenticated(false);
-    setUserEmail(null);
-    localStorage.removeItem('routeify_auth');
-    localStorage.removeItem('routeify_email');
-    setMessages(defaultGreeting); // Reset to guest mode
-    initializeChat();
+  // 🚪 REAL LOGOUT FLOW
+  const logout = async () => {
+    try {
+      await signOut(auth); // Tell Firebase to log them out
+      setIsAuthenticated(false);
+      setUserEmail(null);
+      localStorage.removeItem('routeify_auth');
+      localStorage.removeItem('routeify_email');
+      setMessages(defaultGreeting); // Reset to guest mode
+      initializeChat();
+    } catch (error) {
+      console.error("Logout Failed:", error);
+    }
   };
 
   return (
