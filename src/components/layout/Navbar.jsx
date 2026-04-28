@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Menu, X, Moon, Sun, Compass, MessageSquare, MapPin, Hotel, Map as MapIcon, Utensils, Globe, LogOut, User } from 'lucide-react'
-// 🔥 ADDED: Import the hook to access login/logout and user status
+import { Link } from 'react-router-dom' // 🔥 ADDED: Import Link for routing
 import { useChat } from '../../context/ChatContext'
 
 const Navbar = ({ toggleTheme, theme }) => {
@@ -9,8 +9,8 @@ const Navbar = ({ toggleTheme, theme }) => {
   const [scrolled, setScrolled] = useState(false)
   const [activeSection, setActiveSection] = useState('')
 
-  // 🔥 ADDED: Destructure the auth states from ChatContext
-  const { isAuthenticated, userEmail, logout, setShowAuthModal } = useChat()
+  // 🔥 ADDED: Destructured `user` alongside existing auth states
+  const { isAuthenticated, user, userEmail, logout, setShowAuthModal } = useChat()
 
   useEffect(() => {
     const handleScroll = () => {
@@ -178,7 +178,7 @@ const Navbar = ({ toggleTheme, theme }) => {
               </motion.div>
             </motion.button>
 
-            {/* 🔥 UPDATED: Auth Button Logic */}
+            {/* 🔥 UPDATED: Auth & Profile Logic */}
             {!isAuthenticated ? (
               <motion.button
                 whileHover={{ scale: 1.05 }}
@@ -190,15 +190,20 @@ const Navbar = ({ toggleTheme, theme }) => {
                 <span>Login</span>
               </motion.button>
             ) : (
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={logout}
-                className="px-6 py-2.5 rounded-full text-sm font-extrabold text-rose-600 dark:text-yellow-400 bg-rose-50 dark:bg-emerald-900/40 border border-rose-200 dark:border-emerald-800 flex items-center space-x-2"
-              >
-                <LogOut className="w-4 h-4" />
-                <span className="max-w-[100px] truncate">{userEmail?.split('@')[0]}</span>
-              </motion.button>
+              <Link to="/profile">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="pl-2 pr-4 py-1.5 rounded-full text-sm font-extrabold text-emerald-800 dark:text-emerald-100 bg-emerald-50 dark:bg-emerald-900/40 border border-emerald-200 dark:border-emerald-700 hover:bg-emerald-100 dark:hover:bg-emerald-800/60 transition-all flex items-center space-x-3 shadow-sm"
+                >
+                  <img 
+                    src={user?.photoURL || `https://ui-avatars.com/api/?name=${userEmail?.split('@')[0] || 'User'}&background=10b981&color=fff`} 
+                    alt="Profile" 
+                    className="w-7 h-7 rounded-full border border-emerald-200 dark:border-emerald-600 object-cover"
+                  />
+                  <span className="max-w-[100px] truncate">{user?.displayName?.split(' ')[0] || userEmail?.split('@')[0]}</span>
+                </motion.button>
+              </Link>
             )}
 
             <motion.button
@@ -257,7 +262,19 @@ const Navbar = ({ toggleTheme, theme }) => {
             )
           })}
           
-          {/* 🔥 MOBILE AUTH BUTTON */}
+          {/* 🔥 MOBILE PROFILE LINK (Only visible when logged in) */}
+          {isAuthenticated && (
+            <Link
+              to="/profile"
+              onClick={() => setIsOpen(false)}
+              className="flex items-center space-x-3 w-full px-4 py-3 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/50 rounded-xl transition-colors"
+            >
+              <User className="w-5 h-5" />
+              <span className="font-bold">My Profile</span>
+            </Link>
+          )}
+
+          {/* 🔥 MOBILE LOGIN / LOGOUT BUTTON */}
           <button
             onClick={() => {
               setIsOpen(false);

@@ -8,7 +8,11 @@ import Footer from './components/layout/Footer'
 import Loader from './components/ui/Loader'
 import { useTheme } from './hooks/useTheme'
 import './styles/globals.css'
+// Import the new Profile component at the top
+import Profile from './pages/Profile'; // Adjust the path based on where you saved it
 
+// Inside your <Routes> tag, add this line:
+<Route path="/profile" element={<Profile />} />
 // Error Boundary Component
 class ErrorBoundary extends React.Component {
   constructor(props) {
