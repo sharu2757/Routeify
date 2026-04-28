@@ -1,14 +1,24 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { LogOut, Map, Settings, Calendar, ChevronRight } from 'lucide-react';
+import { LogOut, Map, Calendar, ChevronRight, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useChat } from '../context/ChatContext';
 
 const Profile = () => {
-  const { user, logout } = useChat(); // Pulling user and logout from your context
+  // Pulling user, logout, and the new isAuthLoading state from your context
+  const { user, logout, isAuthLoading } = useChat(); 
   const navigate = useNavigate();
 
-  // If someone tries to visit /profile without being logged in
+  // 🔥 1. THE WAITING ROOM: Show a spinner while Firebase thinks
+  if (isAuthLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-emerald-950">
+        <Loader2 className="w-10 h-10 animate-spin text-emerald-500" />
+      </div>
+    );
+  }
+
+  // 🔥 2. THE BOUNCER: If Firebase finishes and they aren't logged in, kick them out
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-emerald-950">
@@ -18,7 +28,7 @@ const Profile = () => {
             onClick={() => navigate('/')}
             className="px-6 py-2 bg-emerald-500 text-white rounded-lg font-bold hover:bg-emerald-600 transition-colors"
           >
-            Go Home
+            Go Home to Login
           </button>
         </div>
       </div>
@@ -34,6 +44,7 @@ const Profile = () => {
     }
   };
 
+  // 🔥 3. THE DASHBOARD: If they pass the checks, show the beautiful UI
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-emerald-950 pt-24 pb-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto space-y-8">
@@ -48,9 +59,9 @@ const Profile = () => {
           <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-400/10 rounded-full blur-3xl -mr-20 -mt-20"></div>
 
           <img 
-            src={user.photoURL || "https://ui-avatars.com/api/?name=" + (user.displayName || "User") + "&background=10b981&color=fff"} 
+            src={user.photoURL || `https://ui-avatars.com/api/?name=${user.displayName || user.email?.split('@')[0]}&background=10b981&color=fff`} 
             alt="Profile" 
-            className="w-32 h-32 rounded-full border-4 border-emerald-100 dark:border-emerald-700 shadow-md object-cover z-10"
+            className="w-32 h-32 rounded-full border-4 border-emerald-100 dark:border-emerald-700 shadow-md object-cover z-10 bg-white"
           />
           
           <div className="flex-1 text-center md:text-left z-10">
