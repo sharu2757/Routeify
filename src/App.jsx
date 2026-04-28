@@ -8,11 +8,10 @@ import Footer from './components/layout/Footer'
 import Loader from './components/ui/Loader'
 import { useTheme } from './hooks/useTheme'
 import './styles/globals.css'
-// Import the new Profile component at the top
-import Profile from './pages/Profile'; // Adjust the path based on where you saved it
 
-// Inside your <Routes> tag, add this line:
-<Route path="/profile" element={<Profile />} />
+// 🔥 Imported Profile Component
+import Profile from './pages/Profile'; 
+
 // Error Boundary Component
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -91,8 +90,10 @@ function AppContent() {
       <div className={`min-h-screen ${theme === 'dark' ? 'dark' : ''}`}>
         <Navbar toggleTheme={toggleTheme} theme={theme} />
         <AnimatePresence mode="wait">
+          {/* 🔥 The Routes block is where all pages must go! */}
           <Routes>
             <Route path="/" element={<HomePage />} />
+            <Route path="/profile" element={<Profile />} />
           </Routes>
         </AnimatePresence>
         <Footer />
