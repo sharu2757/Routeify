@@ -5,7 +5,6 @@ import { ChatProvider } from './context/ChatContext'
 import { useTheme } from './hooks/useTheme'
 import './styles/globals.css'
 
-<<<<<<< HEAD
 // Layout & UI Imports
 import HomePage from './pages/HomePage'
 import Navbar from './components/layout/Navbar'
@@ -13,20 +12,17 @@ import Footer from './components/layout/Footer'
 import Sidebar from './components/Sidebar'
 import Loader from './components/ui/Loader'
 
-// 🔥 Section Component Imports
+// Section Component Imports
 import MapSection from './components/sections/MapSection'
 import DestinationsSection from './components/sections/DestinationsSection'
 import HotelsSection from './components/sections/HotelsSection'
 import RoutesSection from './components/sections/RoutesSection'
 import FoodSection from './components/sections/FoodSection'
-import ProfileSection from './components/sections/ProfileSection' // <-- NEW!
 
-=======
-// 🔥 Imported Profile Component
-import Profile from './pages/Profile'; 
+// Imported Full Profile Component
+import Profile from './pages/Profile' 
 
 // Error Boundary Component
->>>>>>> 319797eab222a112a197c710cf335d7f8d91267b
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props)
@@ -68,7 +64,6 @@ function AppContent() {
   return (
     <Router>
       <ScrollToTop />
-<<<<<<< HEAD
       
       <div className={`flex min-h-screen bg-gray-50 dark:bg-[#0B1120] ${theme === 'dark' ? 'dark' : ''}`}>
         
@@ -78,6 +73,7 @@ function AppContent() {
         {/* Main Wrapper */}
         <div className={`flex-1 flex flex-col min-h-screen transition-all duration-300 w-full overflow-hidden ${isSidebarOpen ? 'md:ml-64' : 'md:ml-0'}`}>
           
+          {/* Top Navigation bar */}
           <Navbar 
             toggleTheme={toggleTheme} 
             theme={theme} 
@@ -91,33 +87,21 @@ function AppContent() {
               <Routes>
                 <Route path="/" element={<HomePage />} />
                 
-                {/* 🔥 REAL COMPONENTS */}
+                {/* CORE ROUTIFY COMPONENT SECTIONS */}
                 <Route path="/destinations" element={<DestinationsSection />} />
                 <Route path="/hotels" element={<HotelsSection />} />
                 <Route path="/routes" element={<RoutesSection />} />
                 <Route path="/food" element={<FoodSection />} />
-                
-                {/* 🗺️ MAP & PROFILE */}
                 <Route path="/map" element={<MapSection />} />
-                <Route path="/profile" element={<ProfileSection />} />
+                
+                {/* USER PROFILE PAGE */}
+                <Route path="/profile" element={<Profile />} />
               </Routes>
             </AnimatePresence>
           </main>
           
           <Footer />
         </div>
-=======
-      <div className={`min-h-screen ${theme === 'dark' ? 'dark' : ''}`}>
-        <Navbar toggleTheme={toggleTheme} theme={theme} />
-        <AnimatePresence mode="wait">
-          {/* 🔥 The Routes block is where all pages must go! */}
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/profile" element={<Profile />} />
-          </Routes>
-        </AnimatePresence>
-        <Footer />
->>>>>>> 319797eab222a112a197c710cf335d7f8d91267b
       </div>
     </Router>
   )
