@@ -1,9 +1,9 @@
 import { createContext, useState, useEffect, useContext, useRef } from 'react';
 import { generateAIResponse, initializeChat } from '../services/geminiService';
 
-// 🔥 ADDED: Import Firebase Authentication tools
+// 🔥 ADDED: Import Firebase Authentication tools + onAuthStateChanged
 import { auth, googleProvider } from '../services/firebase';
-import { signInWithPopup, signOut } from 'firebase/auth';
+import { signInWithPopup, signOut, onAuthStateChanged } from 'firebase/auth';
 
 export const ChatContext = createContext();
 
@@ -21,6 +21,8 @@ export const ChatProvider = ({ children }) => {
   const [isTyping, setIsTyping] = useState(false);
   
   // Auth State
+  const [user, setUser] = useState(null); // 🔥 ADDED: Holds full Google User data
+  const [isAuthLoading, setIsAuthLoading] = useState(true); // 🔥 ADDED: Controls the loading spinner
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userEmail, setUserEmail] = useState(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -28,18 +30,30 @@ export const ChatProvider = ({ children }) => {
   const [mapLocation, setMapLocation] = useState("India");
   const messagesEndRef = useRef(null);
 
-  // 🚀 ON LOAD: Check if they are logged in. If yes, pull from MongoDB!
+  // 🚀 ON LOAD: Real-time Firebase Auth Listener
   useEffect(() => {
-    const savedAuth = localStorage.getItem('routeify_auth') === 'true';
-    const savedEmail = localStorage.getItem('routeify_email');
-    
-    if (savedAuth && savedEmail) {
-      setIsAuthenticated(true);
-      setUserEmail(savedEmail);
-      fetchChatHistory(savedEmail);
-    } else {
-      initializeChat(); // Start fresh for guests
-    }
+    // This officially waits for Firebase to confirm the user's status
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      if (currentUser) {
+        setUser(currentUser);
+        setIsAuthenticated(true);
+        setUserEmail(currentUser.email);
+        
+        // Sync with local storage to keep your existing logic intact
+        localStorage.setItem('routeify_auth', 'true');
+        localStorage.setItem('routeify_email', currentUser.email);
+        
+        fetchChatHistory(currentUser.email);
+      } else {
+        setUser(null);
+        setIsAuthenticated(false);
+        setUserEmail(null);
+        initializeChat(); // Start fresh for guests
+      }
+      setIsAuthLoading(false); // 🔥 Tells the Profile page to stop spinning!
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const scrollToBottom = () => {
@@ -155,9 +169,10 @@ export const ChatProvider = ({ children }) => {
     try {
       // 1. Trigger the Google Popup
       const result = await signInWithPopup(auth, googleProvider);
-      const realEmail = result.user.email; // Grab their actual Gmail!
+      const realEmail = result.user.email; 
       
       // 2. Set the state
+      setUser(result.user); // 🔥 ADDED: Save Google profile
       setIsAuthenticated(true);
       setUserEmail(realEmail);
       localStorage.setItem('routeify_auth', 'true');
@@ -175,7 +190,8 @@ export const ChatProvider = ({ children }) => {
   // 🚪 REAL LOGOUT FLOW
   const logout = async () => {
     try {
-      await signOut(auth); // Tell Firebase to log them out
+      await signOut(auth); 
+      setUser(null); // 🔥 ADDED
       setIsAuthenticated(false);
       setUserEmail(null);
       localStorage.removeItem('routeify_auth');
@@ -190,7 +206,8 @@ export const ChatProvider = ({ children }) => {
   return (
     <ChatContext.Provider value={{ 
       messages, isTyping, sendMessage, scrollToBottom, clearConversation, messagesEndRef,
-      showAuthModal, setShowAuthModal, isAuthenticated, login, logout, mapLocation 
+      showAuthModal, setShowAuthModal, isAuthenticated, login, logout, mapLocation,
+      user, isAuthLoading // 🔥 EXPOSED TO GLOBAL APP
     }}>
       {children}
     </ChatContext.Provider>

@@ -5,6 +5,7 @@ import { ChatProvider } from './context/ChatContext'
 import { useTheme } from './hooks/useTheme'
 import './styles/globals.css'
 
+<<<<<<< HEAD
 // Layout & UI Imports
 import HomePage from './pages/HomePage'
 import Navbar from './components/layout/Navbar'
@@ -20,6 +21,12 @@ import RoutesSection from './components/sections/RoutesSection'
 import FoodSection from './components/sections/FoodSection'
 import ProfileSection from './components/sections/ProfileSection' // <-- NEW!
 
+=======
+// 🔥 Imported Profile Component
+import Profile from './pages/Profile'; 
+
+// Error Boundary Component
+>>>>>>> 319797eab222a112a197c710cf335d7f8d91267b
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props)
@@ -61,6 +68,7 @@ function AppContent() {
   return (
     <Router>
       <ScrollToTop />
+<<<<<<< HEAD
       
       <div className={`flex min-h-screen bg-gray-50 dark:bg-[#0B1120] ${theme === 'dark' ? 'dark' : ''}`}>
         
@@ -98,6 +106,18 @@ function AppContent() {
           
           <Footer />
         </div>
+=======
+      <div className={`min-h-screen ${theme === 'dark' ? 'dark' : ''}`}>
+        <Navbar toggleTheme={toggleTheme} theme={theme} />
+        <AnimatePresence mode="wait">
+          {/* 🔥 The Routes block is where all pages must go! */}
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/profile" element={<Profile />} />
+          </Routes>
+        </AnimatePresence>
+        <Footer />
+>>>>>>> 319797eab222a112a197c710cf335d7f8d91267b
       </div>
     </Router>
   )

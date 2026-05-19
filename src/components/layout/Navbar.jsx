@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Menu, X, Moon, Sun, Compass, MessageSquare, LogOut, User } from 'lucide-react'
-import { Link, useNavigate } from 'react-router-dom' // 🔥 ADDED Link & useNavigate
+import { 
+  Menu, X, Moon, Sun, Compass, MessageSquare, 
+  LogOut, User, MapPin, Hotel, Map as MapIcon, Utensils, Globe 
+} from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
 import { useChat } from '../../context/ChatContext'
 
 const Navbar = ({ toggleTheme, theme, toggleSidebar, isSidebarOpen }) => {
@@ -9,7 +12,8 @@ const Navbar = ({ toggleTheme, theme, toggleSidebar, isSidebarOpen }) => {
   const [scrolled, setScrolled] = useState(false)
   const navigate = useNavigate()
 
-  const { isAuthenticated, logout, setShowAuthModal } = useChat()
+  // Destructured all needed auth variables securely from the context
+  const { isAuthenticated, user, userEmail, logout, setShowAuthModal } = useChat()
 
   useEffect(() => {
     const handleScroll = () => {
@@ -50,13 +54,12 @@ const Navbar = ({ toggleTheme, theme, toggleSidebar, isSidebarOpen }) => {
           : 'bg-transparent'
       }`}
     >
-      {/* 🔥 CHANGED: w-full and px-4 md:px-8 to push elements to the absolute edges */}
+      {/* Container configured to push elements to absolute viewport boundaries */}
       <div className="w-full px-4 sm:px-6 md:px-8">
         <div className="flex items-center justify-between h-20">
           
           {/* LEFT SIDE: Sidebar Toggle + Logo */}
           <div className="flex items-center gap-2 md:gap-4">
-            
             {!isSidebarOpen && (
               <button
                 onClick={toggleSidebar}
@@ -116,7 +119,7 @@ const Navbar = ({ toggleTheme, theme, toggleSidebar, isSidebarOpen }) => {
               </motion.div>
             </motion.button>
 
-            {/* 🔥 UPDATED AUTH LOGIC: Login Button OR Profile Link */}
+            {/* Auth & Profile Component Routing Logic */}
             {!isAuthenticated ? (
               <motion.button
                 whileHover={{ scale: 1.05 }}
@@ -128,12 +131,19 @@ const Navbar = ({ toggleTheme, theme, toggleSidebar, isSidebarOpen }) => {
                 <span>Login</span>
               </motion.button>
             ) : (
-              <Link 
-                to="/profile"
-                className="p-2.5 rounded-full bg-emerald-100 dark:bg-emerald-900/40 border border-emerald-200 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400 hover:scale-110 transition-all cursor-pointer shadow-sm"
-                title="My Profile"
-              >
-                <User className="w-5 h-5" />
+              <Link to="/profile">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="pl-2 pr-4 py-1.5 rounded-full text-sm font-extrabold text-emerald-800 dark:text-emerald-100 bg-emerald-50 dark:bg-emerald-900/40 border border-emerald-200 dark:border-emerald-700 hover:bg-emerald-100 dark:hover:bg-emerald-800/60 transition-all flex items-center space-x-3 shadow-sm"
+                >
+                  <img 
+                    src={user?.photoURL || `https://ui-avatars.com/api/?name=${userEmail?.split('@')[0] || 'User'}&background=10b981&color=fff`} 
+                    alt="Profile" 
+                    className="w-7 h-7 rounded-full border border-emerald-200 dark:border-emerald-600 object-cover"
+                  />
+                  <span className="max-w-[100px] truncate">{user?.displayName?.split(' ')[0] || userEmail?.split('@')[0]}</span>
+                </motion.button>
               </Link>
             )}
 
@@ -182,6 +192,19 @@ const Navbar = ({ toggleTheme, theme, toggleSidebar, isSidebarOpen }) => {
       >
         <div className="px-4 py-4 space-y-2">
           
+          {/* MOBILE PROFILE LINK (Only visible when logged in) */}
+          {isAuthenticated && (
+            <Link
+              to="/profile"
+              onClick={() => setIsOpen(false)}
+              className="flex items-center space-x-3 w-full px-4 py-3 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/50 rounded-xl transition-colors"
+            >
+              <User className="w-5 h-5" />
+              <span className="font-bold">My Profile</span>
+            </Link>
+          )}
+
+          {/* MOBILE LOGIN / LOGOUT BUTTON */}
           <button
             onClick={() => {
               setIsOpen(false);

@@ -7,7 +7,7 @@ import TranslatorCanvas from '../components/chatbot/TranslatorCanvas'
 import FloatingReviews from '../components/ui/FloatingReviews'
 import FeedbackSection from '../components/sections/FeedbackSection'
 import { useChat } from '../context/ChatContext'
-
+//hello//
 const destinations = [
   { id: 1, name: 'Jaipur, Rajasthan', image: 'https://images.unsplash.com/photo-1477587458883-47145bcbba4e?q=80&w=2070', price: '₹15,999', rating: 4.9, description: 'The Pink City', history: 'Founded in 1727 by Jai Singh II.', famousFor: 'Hawa Mahal & Forts.', visitors: '2.5M+ Annually', bestTime: 'Oct to March', idealDuration: '3-4 Days' },
   { id: 2, name: 'Kerala Backwaters', image: 'https://images.unsplash.com/photo-1602216054374-40e5ec127f8a?q=80&w=2070', price: '₹12,999', rating: 4.8, description: 'Tropical Paradise', history: 'Ancient spice trade hub.', famousFor: 'Houseboats & Ayurveda.', visitors: '1.2M+ Annually', bestTime: 'Sep to March', idealDuration: '5-7 Days' },
