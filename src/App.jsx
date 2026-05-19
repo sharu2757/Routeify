@@ -2,64 +2,46 @@ import React, { useState, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
 import { ChatProvider } from './context/ChatContext'
-import HomePage from './pages/HomePage'
-import Navbar from './components/layout/Navbar'
-import Footer from './components/layout/Footer'
-import Loader from './components/ui/Loader'
 import { useTheme } from './hooks/useTheme'
 import './styles/globals.css'
 
-// Error Boundary Component
+// Layout & UI Imports
+import HomePage from './pages/HomePage'
+import Navbar from './components/layout/Navbar'
+import Footer from './components/layout/Footer'
+import Sidebar from './components/Sidebar'
+import Loader from './components/ui/Loader'
+
+// 🔥 Section Component Imports
+import MapSection from './components/sections/MapSection'
+import DestinationsSection from './components/sections/DestinationsSection'
+import HotelsSection from './components/sections/HotelsSection'
+import RoutesSection from './components/sections/RoutesSection'
+import FoodSection from './components/sections/FoodSection'
+import ProfileSection from './components/sections/ProfileSection' // <-- NEW!
+
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props)
     this.state = { hasError: false, error: null }
   }
-
-  static getDerivedStateFromError(error) {
-    return { hasError: true, error }
-  }
-
-  componentDidCatch(error, errorInfo) {
-    console.error('Error caught by boundary:', error, errorInfo)
-  }
-
+  static getDerivedStateFromError(error) { return { hasError: true, error } }
+  componentDidCatch(error, errorInfo) { console.error('Error:', error, errorInfo) }
   render() {
-    if (this.state.hasError) {
-      return (
-        <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900 p-4">
-          <div className="max-w-md text-center">
-            <h1 className="text-2xl font-bold text-red-600 mb-4">Something went wrong</h1>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
-              {this.state.error?.toString()}
-            </p>
-            <button
-              onClick={() => window.location.reload()}
-              className="px-4 py-2 bg-gradient-to-r from-primary-600 to-secondary-600 text-white rounded-lg hover:shadow-lg transition-all"
-            >
-              Reload Page
-            </button>
-          </div>
-        </div>
-      )
-    }
+    if (this.state.hasError) return (
+      <div className="p-10 text-center text-red-500 font-bold">
+        Something went wrong. Please reload the page.
+      </div>
+    )
     return this.props.children
   }
 }
 
-// ScrollToTop component
 function ScrollToTop() {
-  useEffect(() => {
-    // Don't scroll to top on initial load if there's a hash
-    if (!window.location.hash) {
-      window.scrollTo(0, 0)
-    }
-  }, [])
-  
+  useEffect(() => { if (!window.location.hash) window.scrollTo(0, 0) }, [])
   return null
 }
 
-// Wrapper component to expose chat functions globally
 function GlobalChatWrapper({ children }) {
   return children
 }
@@ -67,31 +49,55 @@ function GlobalChatWrapper({ children }) {
 function AppContent() {
   const [loading, setLoading] = useState(true)
   const { theme, toggleTheme } = useTheme()
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true)
 
   useEffect(() => {
-    // Simulate loading time
-    const timer = setTimeout(() => {
-      setLoading(false)
-    }, 1500)
-
+    const timer = setTimeout(() => setLoading(false), 1500)
     return () => clearTimeout(timer)
   }, [])
 
-  if (loading) {
-    return <Loader />
-  }
+  if (loading) return <Loader />
 
   return (
     <Router>
       <ScrollToTop />
-      <div className={`min-h-screen ${theme === 'dark' ? 'dark' : ''}`}>
-        <Navbar toggleTheme={toggleTheme} theme={theme} />
-        <AnimatePresence mode="wait">
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-          </Routes>
-        </AnimatePresence>
-        <Footer />
+      
+      <div className={`flex min-h-screen bg-gray-50 dark:bg-[#0B1120] ${theme === 'dark' ? 'dark' : ''}`}>
+        
+        {/* Sidebar Component */}
+        <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
+
+        {/* Main Wrapper */}
+        <div className={`flex-1 flex flex-col min-h-screen transition-all duration-300 w-full overflow-hidden ${isSidebarOpen ? 'md:ml-64' : 'md:ml-0'}`}>
+          
+          <Navbar 
+            toggleTheme={toggleTheme} 
+            theme={theme} 
+            toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} 
+            isSidebarOpen={isSidebarOpen} 
+          />
+          
+          {/* Main Content Area */}
+          <main className="flex-1 p-6 md:p-10 pt-24">
+            <AnimatePresence mode="wait">
+              <Routes>
+                <Route path="/" element={<HomePage />} />
+                
+                {/* 🔥 REAL COMPONENTS */}
+                <Route path="/destinations" element={<DestinationsSection />} />
+                <Route path="/hotels" element={<HotelsSection />} />
+                <Route path="/routes" element={<RoutesSection />} />
+                <Route path="/food" element={<FoodSection />} />
+                
+                {/* 🗺️ MAP & PROFILE */}
+                <Route path="/map" element={<MapSection />} />
+                <Route path="/profile" element={<ProfileSection />} />
+              </Routes>
+            </AnimatePresence>
+          </main>
+          
+          <Footer />
+        </div>
       </div>
     </Router>
   )
